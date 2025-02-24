@@ -30,14 +30,12 @@ class VerifyOtpSerializer(ResendOtpSerializer):
     otp = serializers.IntegerField()
 
 
-class ResendOtpSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
 class VerifyOtpSerializer(ResendOtpSerializer):
     otp = serializers.IntegerField()
 
 class SetNewPasswordSerializer(VerifyOtpSerializer):
     password = serializers.CharField()
+    password2 = serializers.CharField()
 
 class LoginSerializer(ResendOtpSerializer):
     password = serializers.CharField()

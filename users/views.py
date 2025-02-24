@@ -124,6 +124,7 @@ class SetNewPasswordView(GenericAPIView):
         email = serializer.validated_data["email"]
         otp_code = serializer.validated_data["otp"]
         password = serializer.validated_data["password"]
+        password2 = serializer.validated_data["password2"]
 
         user = CustomUser.objects.get_or_none(email=email)
 
@@ -142,6 +143,9 @@ class SetNewPasswordView(GenericAPIView):
                 err_code=ErrorCode.EXPIRED_OTP,
                 status_code=400
             )
+        
+        if password != password2:
+            return CustomResponse.error(message='Passwords do not match', err_code=ErrorCode.INVALID_ENTRY, status_code=400)
         
         user.set_password(password)
         user.save()

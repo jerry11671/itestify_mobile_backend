@@ -3,7 +3,7 @@ from rest_framework.response import Response
 class CustomResponse:
     def success(message, data=None, status_code=200):
         response = {
-            'status': 'success',
+            'success': True,
             'message': message,
             'data': data
         }
@@ -13,7 +13,7 @@ class CustomResponse:
     
     def error(message, err_code, data=None, status_code=400):
         response = {
-            'status': 'failed',
+            'success': False,
             'message': message,
             'code': err_code,
             'data': data
