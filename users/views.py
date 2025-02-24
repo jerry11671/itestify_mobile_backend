@@ -1,0 +1,158 @@
+from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
+from .serializers import RegistrationSerializer, LoginSerializer, ResendOtpSerializer, SetNewPasswordSerializer
+from rest_framework import status
+from .models import CustomUser, Otp
+from common.responses import CustomResponse
+from common.error import ErrorCode
+from .emails import Util
+
+
+
+class RegistrationAPIView(GenericAPIView):
+    serializer_class = RegistrationSerializer
+    
+    def post(self, request):
+        data = request.data
+        
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        # check for existing user
+        user = CustomUser.objects.get_or_none(email=data['email'])
+        
+        if user:
+            return CustomResponse.error(
+                message='User with this email already exists.',
+                err_code=ErrorCode.INVALID_ENTRY,
+                status_code=400
+            )
+        
+        # Create user
+        data.pop('password2', None)
+        user = CustomUser.objects.create_user(**data)
+        token = user.token()
+        
+        return CustomResponse.success(
+            message="Account created successfully",
+            data={"user": 
+                {
+                    "id": user.id, 
+                    "email": user.email,
+                    "full_name": user.full_name
+                },
+                "token": {"access": token["access"], "refresh": token["refresh"]}
+            },
+            status_code=201
+        )
+        
+        
+class LoginAPIView(GenericAPIView):
+    serializer_class = LoginSerializer
+    def post(self, request):
+        data = request.data
+        serializer = LoginSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        user = CustomUser.objects.get_or_none(email=serializer.data["email"])   
+        
+        if not user:
+            return CustomResponse.error(
+                message="User with this email does not exist.",
+                err_code=ErrorCode.INVALID_CREDENTIALS,
+                status_code=401
+            )
+            
+        if not user.check_password(serializer.data["password"]):
+            return CustomResponse.error(
+                message="Password is not correct!",
+                err_code=ErrorCode.INVALID_CREDENTIALS,
+                status_code=401
+            )
+            
+        token = user.token()
+        
+        data = {
+            "email": user.email,
+            "full_name": user.full_name,
+            "access": token['access'],
+            "refresh": token['refresh']
+        }
+
+        return CustomResponse.success(
+            message="Login successful",
+            data=data,
+            status_code=201
+        )
+      
+      
+class SendPasswordResetOtpView(GenericAPIView):
+    serializer_class = ResendOtpSerializer
+    
+    def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        user = CustomUser.objects.get_or_none(email=email)
+
+        if not user:
+            return CustomResponse.error(
+                message="User does not exist",
+                err_code=ErrorCode.INVALID_ENTRY,
+                status_code=400
+            )
+        
+        Util.send_password_reset_email(user)
+
+        return CustomResponse.success(
+            message="Password reset otp has been sent",
+            status_code=200
+        )
+        
+        
+class SetNewPasswordView(GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+
+    async def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data["email"]
+        otp_code = serializer.validated_data["otp"]
+        password = serializer.validated_data["password"]
+
+        user = CustomUser.objects.get_or_none(email=email)
+
+        if not user:
+            return CustomResponse.error(
+                message="User does not exist!",
+                err_code=ErrorCode.INVALID_ENTRY,
+                status_code=400
+            )
+        
+        otp = Otp.objects.get_or_none(user=user)
+
+        if otp is None or otp.code != otp_code:
+            return CustomResponse.error(
+                message="Otp has expired",
+                err_code=ErrorCode.EXPIRED_OTP,
+                status_code=400
+            )
+        
+        user.set_password(password)
+        await user.save()
+        await otp.delete()
+
+        return CustomResponse.success(
+            message="Password changed successfully",
+            status_code=200
+        )
+        
+        
+
+
+        
