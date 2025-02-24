@@ -37,9 +37,7 @@ class VerifyOtpSerializer(ResendOtpSerializer):
     otp = serializers.IntegerField()
 
 class SetNewPasswordSerializer(VerifyOtpSerializer):
-    password = serializers.CharField(
-        min_length=8, error_messages={'min_length': _("{min_length} characters min.")}
-    )
+    password = serializers.CharField()
 
 class LoginSerializer(ResendOtpSerializer):
     password = serializers.CharField()

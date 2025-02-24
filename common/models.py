@@ -1,3 +1,16 @@
-from django.db import models
+from django.db import models 
+from .managers import GetOrNoneManager
+import uuid 
 
-# Create your models here.
+class BaseModel(models.Model):
+    id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, primary_key=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = GetOrNoneManager()
+
+    class Meta:
+        abstract = True

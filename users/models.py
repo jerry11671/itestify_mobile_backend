@@ -4,6 +4,7 @@ from .managers import CustomUserManager
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import timezone
 from django.conf import settings
+from common.models import BaseModel
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
@@ -33,11 +34,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return tokens
     
     
-class Otp(models.Model):
+class Otp(BaseModel):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     code = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def check_expiration(self):
         now = timezone.now()

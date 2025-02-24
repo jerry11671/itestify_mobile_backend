@@ -122,5 +122,5 @@ EMAIL_OTP_EXPIRE_SECONDS= 300
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'chiemenagodson532@gmail.com'
-EMAIL_HOST_PASSWORD = 'bedkitrytawauemw'
+EMAIL_HOST_USER = 'ifnotgodtech@gmail.com'
+EMAIL_HOST_PASSWORD = 'lismugxbibddrwex'

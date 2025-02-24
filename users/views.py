@@ -116,7 +116,7 @@ class SendPasswordResetOtpView(GenericAPIView):
 class SetNewPasswordView(GenericAPIView):
     serializer_class = SetNewPasswordSerializer
 
-    async def post(self, request):
+    def post(self, request):
         data = request.data
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
@@ -144,8 +144,8 @@ class SetNewPasswordView(GenericAPIView):
             )
         
         user.set_password(password)
-        await user.save()
-        await otp.delete()
+        user.save()
+        otp.delete()
 
         return CustomResponse.success(
             message="Password changed successfully",
