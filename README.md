@@ -1,4 +1,4 @@
-# Installation Guide: Dependencies with Pipenv
+# Installation Guide: Dependencies with Pip
 
 Follow the steps below to set up your Python environment and install the required dependencies.
 
