@@ -3,6 +3,12 @@ from .models import CustomUser
 from django.utils.translation import gettext_lazy as _
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [ "id", "email", "full_name", "last_login", "created_at"]
+
+
 
 class RegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)

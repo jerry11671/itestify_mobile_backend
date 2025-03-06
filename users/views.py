@@ -1,12 +1,24 @@
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from .serializers import RegistrationSerializer, LoginSerializer, ResendOtpSerializer, SetNewPasswordSerializer
+from .serializers import RegistrationSerializer, LoginSerializer, ResendOtpSerializer, SetNewPasswordSerializer, UserSerializer
 from rest_framework import status
 from .models import CustomUser, Otp
 from common.responses import CustomResponse
 from common.error import ErrorCode
 from .emails import Util
 from datetime import datetime
+
+
+class GetRegisteredUsers(GenericAPIView):
+    serializer_class = UserSerializer
+    def get(self, request):
+        users = CustomUser.objects.filter(is_superuser=False)
+        serializer = self.serializer_class(users, many=True)
+        return CustomResponse.success(
+            message="Users retrieved successfully",
+            data=serializer.data,
+            status_code=200
+        )
 
 
 
@@ -41,7 +53,7 @@ class RegistrationAPIView(GenericAPIView):
                     "id": user.id, 
                     "email": user.email,
                     "full_name": user.full_name,
-                    "date_of_registration": user.created_at
+                    "created_at": user.created_at
                 },
                 "token": {"access": token["access"], "refresh": token["refresh"]}
             },
@@ -86,13 +98,14 @@ class LoginAPIView(GenericAPIView):
         token = user.token()
         
         user.last_login = datetime.now()
+        user.save()
         
         data = {
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
             "last_login": user.last_login,
-            "date_of_registration": user.created_at,
+            "created_at": user.created_at,
             "token": {
                 "access": token['access'],
                 "refresh": token['refresh']
