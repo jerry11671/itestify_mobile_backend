@@ -6,6 +6,7 @@ from .models import CustomUser, Otp
 from common.responses import CustomResponse
 from common.error import ErrorCode
 from .emails import Util
+from datetime import datetime
 
 
 
@@ -33,18 +34,30 @@ class RegistrationAPIView(GenericAPIView):
         user = CustomUser.objects.create_user(**data)
         token = user.token()
         
-        return CustomResponse.success(
+        response =  CustomResponse.success(
             message="Account created successfully",
             data={"user": 
                 {
                     "id": user.id, 
                     "email": user.email,
-                    "full_name": user.full_name
+                    "full_name": user.full_name,
+                    "date_of_registration": user.created_at
                 },
                 "token": {"access": token["access"], "refresh": token["refresh"]}
             },
             status_code=201
         )
+        
+        response.set_cookie(
+                key="refresh",
+                value=token["refresh"],
+                httponly=True,  # Set HttpOnly flag
+            )
+        response.set_cookie(
+            key="access", value=token["access"], httponly=True  # Set HttpOnly flag
+        )
+            
+        return response
         
         
 class LoginAPIView(GenericAPIView):
@@ -72,18 +85,36 @@ class LoginAPIView(GenericAPIView):
             
         token = user.token()
         
+        user.last_login = datetime.now()
+        
         data = {
+            "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
-            "access": token['access'],
-            "refresh": token['refresh']
+            "last_login": user.last_login,
+            "date_of_registration": user.created_at,
+            "token": {
+                "access": token['access'],
+                "refresh": token['refresh']
+            }
         }
 
-        return CustomResponse.success(
+        response = CustomResponse.success(
             message="Login successful",
             data=data,
             status_code=201
         )
+        
+        response.set_cookie(
+                key="refresh",
+                value=token["refresh"],
+                httponly=True,  # Set HttpOnly flag
+            )
+        response.set_cookie(
+            key="access", value=token["access"], httponly=True  # Set HttpOnly flag
+        )
+            
+        return response
       
       
 class SendPasswordResetOtpView(GenericAPIView):

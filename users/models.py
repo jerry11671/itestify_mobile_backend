@@ -5,14 +5,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import timezone
 from django.conf import settings
 from common.models import BaseModel
+from datetime import datetime
+import uuid
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.CharField(max_length=10, default=uuid.uuid4().hex[:6], primary_key=True, editable=False)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=datetime.now())
     updated_at = models.DateTimeField(auto_now=True)
+    last_login = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.full_name
